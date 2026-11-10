@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../data/frases_db.dart';
-import '../models/frase.dart';
+import 'package:frases_app/data/frases_db.dart';
+import 'package:frases_app/models/frase.dart';
 import 'formulario_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _cargarFrases() {
     setState(() {
-      _frasesFuture = FrasesDatabase.instance.getFrases();
+      _frasesFuture = FrasesDb.instancia.obtenerTodas();
     });
   }
 
@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Frases App'),
+        title: const Text('Mis Frases'),
       ),
       body: FutureBuilder<List<Frase>>(
         future: _frasesFuture,
@@ -49,16 +49,44 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: frases.length,
             itemBuilder: (context, index) {
               final frase = frases[index];
-              return ListTile(
-                title: Text(frase.texto),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    if (frase.id != null) {
-                      await FrasesDatabase.instance.deleteFrase(frase.id!);
-                      _cargarFrases();
-                    }
-                  },
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: Text(
+                    '"${frase.frase}"',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text('- ${frase.autor}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Botón Editar
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () async {
+                          final resultado = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FormularioScreen(frase: frase),
+                            ),
+                          );
+                          if (resultado == true) {
+                            _cargarFrases();
+                          }
+                        },
+                      ),
+                      // Botón Eliminar
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          if (frase.id != null) {
+                            await FrasesDb.instancia.eliminar(frase.id!);
+                            _cargarFrases();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
